@@ -1,0 +1,5 @@
+kdenlive (26.07.70-1) unstable; urgency=medium
+
+  * Initial packaging for Debian deployment.
+
+ -- Kdenlive Packaging <packaging@kdenlive.org>  Thu, 19 Jun 2026 12:00:00 +0000

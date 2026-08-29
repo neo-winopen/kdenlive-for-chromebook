@@ -1,0 +1,33 @@
+Source: kdenlive
+Section: graphics
+Priority: optional
+Maintainer: Kdenlive Packaging <packaging@kdenlive.org>
+Build-Depends: debhelper-compat (= 13), cmake, extra-cmake-modules, pkg-config,
+ libqt6core5-dev, libqt6gui5-dev, libqt6widgets5-dev, libqt6svg-dev,
+ libqt6multimedia-dev, libqt6networkauth-dev, libqt6declarative-dev,
+ libkf6i18n-dev, libkf6archive-dev, libkf6bookmarks-dev, libkf6codecs-dev,
+ libkf6config-dev, libkf6configwidgets-dev, libkf6coreaddons-dev,
+ libkf6crash-dev, libkf6dbusaddons-dev, libkf6guiaddons-dev,
+ libkf6iconthemes-dev, libkf6kio-dev, libkf6newstuff-dev,
+ libkf6notifyconfig-dev, libkf6purpose-dev, libkf6solid-dev,
+ libkf6textwidgets-dev, libkf6widgetsaddons-dev, libkf6xmlgui-dev,
+ libkf6itemviews-dev, libkf6jobwidgets-dev, libmlt++-dev | libmlt-dev,
+ libavformat-dev, libavcodec-dev, libswresample-dev, libavutil-dev,
+ libopencv-dev, libfftw3-dev, libsox-dev, libexif-dev, libpango1.0-dev,
+ libsndfile1-dev, libtag1-dev, libgsm1-dev, libzvbi-dev, libopenal-dev,
+ libass-dev, libvpx-dev, libopus-dev, libtheora-dev, libvorbis-dev,
+ libmng-dev, libjpeg-dev, libpng-dev, libwebp-dev, libxml2-dev,
+ libkf6notifications-dev, libkf6purpose-dev, libkf6kded-dev,
+ libkf6archive-dev, libkf6solid-dev, libkf6purpose-dev
+Standards-Version: 4.6.0
+Homepage: https://kdenlive.org/
+Vcs-Git: https://invent.kde.org/multimedia/kdenlive.git
+Vcs-Browser: https://invent.kde.org/multimedia/kdenlive
+
+Package: kdenlive
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Non-linear video editor for KDE
+ Kdenlive is a free and open source video editor for KDE, built on Qt6 and
+ MLT. It provides a multi-track timeline, transitions, effects, and support
+ for many multimedia formats.

@@ -56,6 +56,15 @@ void OpenGLVideoWidget::initialize()
     auto context = static_cast<QOpenGLContext *>(quickWindow()->rendererInterface()->getResource(quickWindow(), QSGRendererInterface::OpenGLContextResource));
     m_quickContext = context;
 
+    // Detect Crostini/ChromeOS container environment
+    QByteArray sommelier_parent = qgetenv("SOMMELIER_PARENT_PID");
+    bool isCrostini = !sommelier_parent.isEmpty();
+    if (isCrostini) {
+        qWarning() << "Running in Crostini container (SOMMELIER_PARENT_PID=" << QString::fromUtf8(sommelier_parent) << ")";
+        qWarning() << "GPU acceleration will be limited due to container sandboxing";
+        qWarning() << "For best performance, consider using native Flatpak on ARM Chromebooks";
+    }
+
     if (!m_offscreenSurface.isValid()) {
         m_offscreenSurface.setFormat(context->format());
         m_offscreenSurface.create();
@@ -67,6 +76,9 @@ void OpenGLVideoWidget::initialize()
     qDebug() << "OpenGL renderer" << QString::fromUtf8((const char *)glGetString(GL_RENDERER));
     qDebug() << "OpenGL threaded?" << context->supportsThreadedOpenGL();
     qDebug() << "OpenGL ES?" << context->isOpenGLES();
+    if (isCrostini) {
+        qDebug() << "Running in Crostini environment with restricted GPU access";
+    }
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
     qDebug() << "OpenGL maximum texture size =" << m_maxTextureSize;
     GLint dims[2];

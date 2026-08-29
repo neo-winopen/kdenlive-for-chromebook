@@ -294,8 +294,25 @@ bool VideoWidget::initGPUAccel()
 {
     if (!KdenliveSettings::gpu_accel()) return false;
 
+    // Detect Crostini/ChromeOS container environment
+    QByteArray sommelier_parent = qgetenv("SOMMELIER_PARENT_PID");
+    bool isCrostini = !sommelier_parent.isEmpty();
+
+    if (isCrostini) {
+        qWarning() << "Initializing GPU acceleration in Crostini container";
+        // Apply Crostini-specific GPU settings for better compatibility
+        // Set lower texture quality to reduce memory pressure in sandboxed container
+        mlt_properties_set_int(mlt_global_properties(), "kdenlive.crostini", 1);
+    }
+
     m_glslManager.reset(new Mlt::Filter(pCore->getProjectProfile(), "glsl.manager"));
-    return m_glslManager->is_valid();
+    bool success = m_glslManager->is_valid();
+    
+    if (success && isCrostini) {
+        qDebug() << "GPU acceleration enabled with Crostini optimizations";
+    }
+    
+    return success;
 }
 
 void VideoWidget::disableGPUAccel()

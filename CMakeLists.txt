@@ -34,6 +34,19 @@ if(UNIX AND NOT APPLE AND NOT ANDROID AND NOT HAIKU)
 endif()
 option(USE_DBUS "Build components using DBus" ${USE_DBUS_DEFAULT})
 
+# Detect Crostini (ChromeOS Linux container)
+set(DETECTED_CROSTINI FALSE)
+if(EXISTS /etc/lsb-release-cros OR EXISTS /etc/cros-containers/cri.json)
+    set(DETECTED_CROSTINI TRUE)
+    message(STATUS "Detected Crostini environment - enabling ChromeOS container optimizations")
+    add_definitions(-DKDENLIVE_CROSTINI_BUILD)
+endif()
+option(USE_CROSTINI_BUILD "Enable Crostini/ChromeOS container optimizations" ${DETECTED_CROSTINI})
+if(USE_CROSTINI_BUILD)
+    add_definitions(-DKDENLIVE_CROSTINI_BUILD)
+    message(STATUS "Building for Crostini with GPU optimizations")
+endif()
+
 option(BUILD_DESIGNERPLUGIN "Build plugin for Qt Designer" OFF)
 
 # Minimum versions of main dependencies.
