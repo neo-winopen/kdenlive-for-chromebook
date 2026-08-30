@@ -3,7 +3,6 @@
     SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
 */
 
-import QtQuick.Controls 2.15
 import QtQuick 2.15
 
 import org.kde.ki18n
@@ -75,6 +74,11 @@ MouseArea {
                 id: zoomButton
                 monitorController: barZone.monitorController
                 isClipMonitor: barZone.isClipMonitor
+                onPopupAboutToHide: {
+                    if (!barZone.containsMouse) {
+                        scenetoolbar.opacity = 0
+                    }
+                }
             }
             K.MonitorToolButton {
                 objectName: "moveBar"

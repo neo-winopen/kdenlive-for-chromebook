@@ -3,7 +3,6 @@
     SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
 */
 
-import QtQuick.Controls
 import QtQuick
 
 import org.kde.ki18n
@@ -15,20 +14,15 @@ MouseArea {
     hoverEnabled: true
     required property K.MonitorProxy monitorController
     required property bool isClipMonitor
+    required property int maskMode
     property bool rightSide: true
     acceptedButtons: Qt.NoButton
     width: 2.4 * K.UiUtils.baseSizeMedium
     height: parent.height
-    Timer {
-        id: hideTimer
-        interval: 3000
-        running: false
-        repeat: false
-        onTriggered: {
-            generateLabel.visible = false
-        }
-    }
     SystemPalette { id: activePalette }
+
+    signal generateMask()
+    signal exitMaskPreview()
 
     Rectangle {
         id: effecttoolbar
@@ -69,15 +63,9 @@ MouseArea {
                 iconName: "media-record"
                 toolTipText: KI18n.i18n("Generate Mask")
                 checkable: false
-                visible: root.maskMode != MaskModeType.MaskPreview
+                visible: barZone.maskMode != MaskModeType.MaskPreview
                 onClicked: {
-                    generateLabel.visible = true
-                    if (root.keyframes.length > 0 || (root.boxCoords[2] > 0 && root.boxCoords[3] > 0)) {
-                        root.generateMask()
-                    } else {
-                        // Display the message for 3 seconds
-                        hideTimer.start()
-                    }
+                    barZone.generateMask()
                 }
             }
             K.MonitorToolButton {
@@ -105,16 +93,21 @@ MouseArea {
             K.MonitorToolButton {
                 objectName: "abortMask"
                 iconName: "dialog-close"
-                toolTipText: root.maskMode != MaskModeType.MaskPreview ? KI18n.i18n("Exit Mask Creation") : KI18n.i18n("Exit Preview Mode")
+                toolTipText: barZone.maskMode != MaskModeType.MaskPreview ? KI18n.i18n("Exit Mask Creation") : KI18n.i18n("Exit Preview Mode")
                 checkable: false
                 onClicked: {
-                    root.exitMaskPreview()
+                    barZone.exitMaskPreview()
                 }
             }
             K.MonitorZoomButton {
                 id: zoomButton
                 monitorController: barZone.monitorController
                 isClipMonitor: barZone.isClipMonitor
+                onPopupAboutToHide: {
+                    if (!barZone.containsMouse) {
+                        effecttoolbar.opacity = 0
+                    }
+                }
             }
 
             K.MonitorToolButton {

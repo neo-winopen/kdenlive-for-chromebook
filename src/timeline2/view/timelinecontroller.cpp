@@ -552,7 +552,11 @@ int TimelineController::insertNewCompositionAtPos(int tid, int position, const Q
     if (topCid > 0) {
         return addCompositionToClip(transitionId, topCid, 0);
     } else {
-        int lowerVideoTrackId = m_model->getPreviousVideoTrackIndex(tid);
+        int previousTrack = m_model->getPreviousTrackId(tid);
+        int lowerVideoTrackId = 0;
+        if (previousTrack != tid) {
+            lowerVideoTrackId = m_model->getTrackMltIndex(previousTrack);
+        }
         if (lowerVideoTrackId > 0) {
             int lowerCid = m_model->getTrackById_const(lowerVideoTrackId)->getClipByStartPosition(position);
             if (lowerCid > 0) {
@@ -594,11 +598,15 @@ int TimelineController::insertNewComposition(int tid, int clipId, int offset, QS
     int endPos = minimumPos + clip_duration;
     int position = minimumPos;
     int duration = qMin(clip_duration, pCore->getDurationFromString(KdenliveSettings::transition_duration()));
-    int lowerVideoTrackId = m_model->getPreviousVideoTrackIndex(tid);
+    int previousTrack = m_model->getPreviousTrackId(tid);
+    int lowerVideoTrackMltIndex = 0;
+    if (previousTrack != tid) {
+        lowerVideoTrackMltIndex = m_model->getTrackMltIndex(previousTrack);
+    }
     bool revert = offset > clip_duration / 2;
     int bottomId = 0;
-    if (lowerVideoTrackId > 0) {
-        bottomId = m_model->getTrackById_const(lowerVideoTrackId)->getClipByPosition(position + offset);
+    if (lowerVideoTrackMltIndex > 0) {
+        bottomId = m_model->getTrackById_const(previousTrack)->getClipByPosition(position + offset);
     }
     if (bottomId <= 0) {
         // No video track underneath
@@ -627,7 +635,7 @@ int TimelineController::insertNewComposition(int tid, int clipId, int offset, QS
             }
         } else if (position >= bottom.first) {
             // Lower clip is before or at same pos as top clip
-            int test_duration = m_model->getTrackById_const(lowerVideoTrackId)->suggestCompositionLength(position);
+            int test_duration = m_model->getTrackById_const(previousTrack)->suggestCompositionLength(position);
             if (test_duration > 0) {
                 duration = qMin(test_duration, clip_duration);
             }
@@ -691,7 +699,11 @@ int TimelineController::insertComposition(int tid, int position, QString transit
         duration = pCore->getDurationFromString(KdenliveSettings::transition_duration());
     }
     // Check if composition should be reversed (top clip at beginning, bottom at end)
-    int a_track = m_model->getPreviousVideoTrackPos(tid);
+    int previousTrack = m_model->getPreviousTrackId(tid);
+    int a_track = 0;
+    if (previousTrack != tid) {
+        a_track = m_model->getTrackMltIndex(previousTrack);
+    }
     int topClip = m_model->getTrackById_const(tid)->getClipByPosition(position);
     int bottomClip = -1;
     if (a_track > 0) {
@@ -2583,9 +2595,13 @@ int TimelineController::requestItemRippleResize(int itemId, int size, bool right
 void TimelineController::updateTrimmingMode()
 {
     if (trimmingActive()) {
-        requestStartTrimmingMode();
+        if (m_trimmingClip != getMainSelectedClip()) {
+            requestStartTrimmingMode();
+            m_trimmingClip = getMainSelectedClip();
+        }
     } else {
         requestEndTrimmingMode();
+        m_trimmingClip = -1;
     }
 }
 

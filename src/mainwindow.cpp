@@ -78,6 +78,7 @@ SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
 #include "jogshuttle/jogmanager.h"
 #endif
 
+#include <kddockwidgets/core/DockRegistry.h>
 #include <kddockwidgets/core/FloatingWindow.h>
 #include <kddockwidgets/core/MainWindow.h>
 
@@ -113,6 +114,7 @@ SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
 #include <QFileDialog>
 #include <QMenu>
 #include <QMenuBar>
+#include <QProxyStyle>
 #include <QPushButton>
 #include <QScreen>
 #include <QStandardPaths>
@@ -718,6 +720,8 @@ void MainWindow::init()
     timelineHeadersMenu->addAction(actionCollection()->action(QStringLiteral("move_track_down")));
     timelineHeadersMenu->addAction(actionCollection()->action(QStringLiteral("fit_all_tracks")));
     timelineHeadersMenu->addAction(actionCollection()->action(QStringLiteral("show_track_record")));
+    timelineHeadersMenu->addAction(actionCollection()->action(QStringLiteral("select_track")));
+
     connect(timelineHeadersMenu, &QMenu::aboutToShow, this, [this]() {
         auto moveUp = actionCollection()->action(QStringLiteral("move_track_up"));
         auto moveDown = actionCollection()->action(QStringLiteral("move_track_down"));
@@ -1020,9 +1024,9 @@ void MainWindow::loadContainerActions()
         connect(monitorOverlay, &QMenu::triggered, this, &MainWindow::slotSwitchMonitorOverlay);
 
         m_projectMonitor->setupMenu(static_cast<QMenu *>(factory()->container(QStringLiteral("monitor_go"), this)), monitorOverlay, m_playZone,
-                                    m_playZoneFromCursor, m_loopZone, nullptr, m_loopClip);
+                                    m_playZoneFromCursor, m_loopZone, m_loopClip);
         m_clipMonitor->setupMenu(static_cast<QMenu *>(factory()->container(QStringLiteral("monitor_go"), this)), monitorOverlay, m_playZone,
-                                 m_playZoneFromCursor, m_loopZone, static_cast<QMenu *>(factory()->container(QStringLiteral("marker_menu"), this)), nullptr);
+                                 m_playZoneFromCursor, m_loopZone, nullptr);
     }
 
     QMenu *clipInTimeline = static_cast<QMenu *>(factory()->container(QStringLiteral("clip_in_timeline"), this));
@@ -5298,7 +5302,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
             }
         }
         break;
-    case QEvent::ApplicationPaletteChange:
+    case QEvent::ApplicationPaletteChange: {
         if (m_assetPanel) {
             m_assetPanel->clear();
         }
@@ -5317,8 +5321,17 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
         applyToolMessageStyling();
         applyZoomLevelButtonStyling();
 
+        for (KDDockWidgets::Core::Group *group : KDDockWidgets::DockRegistry::self()->groups()) {
+            auto tab_bar = static_cast<KDDockWidgets::QtWidgets::TabBar *>(group->tabBar()->view());
+            if (QProxyStyle *style = qobject_cast<QProxyStyle *>(tab_bar->style())) {
+                style->setBaseStyle(QStyleFactory::create(qApp->style()->name()));
+                tab_bar->setPalette(qApp->palette());
+            }
+        }
+
         Q_EMIT pCore->updatePalette();
         break;
+    }
     default:
         break;
     }
@@ -5543,7 +5556,7 @@ void MainWindow::checkMaxCacheSize()
                             QAction *updateAction = new QAction(i18n("Go to download page"), this);
                             connect(updateAction, &QAction::triggered, this, []() {
                                 QDesktopServices::openUrl(
-                                    QUrl(QStringLiteral("https://kdenlive.org/download?mtm_campaign=kdenlive_inapp&mtm_kwd=update_reminder&mtm_content=%1")
+                                    QUrl(QStringLiteral("https://kdenlive.org/download?utm_campaign=kdenlive_inapp&utm_term=update_reminder&utm_content=%1")
                                              .arg(KAboutData::applicationData().version())));
                             });
                             QAction *abortAction = new QAction(i18n("Never check again"), this);
@@ -5829,8 +5842,8 @@ void MainWindow::appHelpActivated()
 {
     // Don't use default help, show our website
     // QDesktopServices::openUrl(QUrl(QStringLiteral("help:kdenlive")));
-    const QString helpUrl =
-        QStringLiteral("https://docs.kdenlive.org?mtm_campaign=kdenlive_inapp&mtm_kwd=help_action&mtm_content=%1").arg(KAboutData::applicationData().version());
+    const QString helpUrl = QStringLiteral("https://docs.kdenlive.org?utm_campaign=kdenlive_inapp&utm_term=help_action&utm_content=%1")
+                                .arg(KAboutData::applicationData().version());
     if (pCore->packageType() == LinuxPackageType::AppImage) {
         qDebug() << "::::: LAUNCHING APPIMAGE BROWSER.........";
         QProcessEnvironment env = getCleanEnvironement();
